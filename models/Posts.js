@@ -17,9 +17,7 @@ const PostSchema = new Schema({
     },
     image:{
         data: Buffer,
-        type: String,
-    //Todo add image as required
-
+        contentType: String,
         // required: true
     },
     contact:{

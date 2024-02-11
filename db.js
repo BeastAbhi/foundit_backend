@@ -16,3 +16,6 @@ module.exports = connectToMongo;
 // npm i bcryptjs
 // npm install jsonwebtoken
 // npm install dotenv --save
+// npm install cors
+
+//for image uploading

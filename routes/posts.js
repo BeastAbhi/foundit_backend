@@ -3,9 +3,20 @@ const fetchuser = require('../middleware/fetchUser');
 const router = express.Router()
 const Posts = require('../models/Posts')
 const { body, validationResult } = require("express-validator");
+const multer = require('multer')
+const fs = require('fs');
+const path = require('path');
 
+const Storage = multer.diskStorage({
+    destination:'../foundit_frontend/src/images',
+    filename:(req,file,cb)=>{
+        cb(null,Date.now() + file.originalname)
+    }
+})
 
-
+const upload = multer({
+    storage:Storage
+}).single('image')
 //Rout 1: GET all the posts: POST "/api/posts/fetchallposts" Login require
 router.post('/fetchallposts', fetchuser, async (req, res)=>{
     try {
@@ -21,32 +32,40 @@ router.post('/fetchallposts', fetchuser, async (req, res)=>{
 
 //Rout 2: add a posts: POST "/api/posts/addpost" Login require
 router.post('/addpost', fetchuser, [
-    body('itemName', "Name should be at least 3 characters").isLength({ min:3 }),
-    body('collectFrom', 'Collection address must be at least 5 characters').isLength({min:5}),
-    //Todo add image as required************
-
-
+    //  body('itemName', "Name should be at least 3 characters").isLength({ min:3 }),
+    //  body('collectFrom', 'Collection address must be at least 5 characters').isLength({min:5}),
     // body('image', 'Please select an image').notEmpty()
-], async (req, res)=>{
-    const {itemName, collectFrom, image, contact, description} = req.body;
-    //This will validate the entred data and respond as per the data
-    //It will return bad request if there are any errors in the data
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        success = false
-        return res.status(400).json({success, errors: errors.array() });
-      }
-      try { 
-          const post = new Posts({
-            itemName, collectFrom, image, contact, description, user: req.user.id
-          })
-          const savePost = await post.save()
-        res.json(savePost)
-      } catch (error) {
-        console.error(error.message)
-        success = false
-        res.status(500).send(success, "Oops some thing went wrong!!")
-      }
+],async (req, res)=>{
+    upload(req,res,async (err)=>{
+        if(err){
+            console.log(err)
+        }
+        else{
+            const {itemName, collectFrom, contact, description} = req.body; 
+            //This will validate the entred data and respond as per the data
+            //It will return bad request if there are any errors in the data
+            // const errors = validationResult(req);
+            // if (!errors.isEmpty()) {
+            //     success = false
+            //     console.log(errors.array())
+            //     return res.status(400).json({success, error: errors.array() });
+            //   }
+              try { 
+                  const post = new Posts({
+                    itemName, collectFrom, image:{
+                        data:req.file.filename,
+                        contentType:req.file.mimetype,
+                    }, contact, description, user: req.user.id
+                  })
+                  const savePost = await post.save()
+                res.json(savePost)
+              } catch (error) {
+                success = false
+                res.status(500).send(success, "Oops some thing went wrong!!")
+              }
+        }
+    })
+
 })
 
 

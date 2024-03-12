@@ -16,9 +16,8 @@ const PostSchema = new Schema({
         required: true
     },
     image:{
-        data: Buffer,
-        contentType: String,
-        // required: true
+        type : String,
+        required: true
     },
     contact:{
         type: String
@@ -29,7 +28,7 @@ const PostSchema = new Schema({
     },
     description:{
         type: String
-    },
+    }
 });
 
 module.exports = mongoose.model('post',PostSchema);

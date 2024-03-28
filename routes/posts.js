@@ -12,7 +12,7 @@ router.post("/fetchallposts", fetchuser, async (req, res) => {
     res.json(posts);
   } catch (error) {
     console.error(error.message);
-    res.status(500).send("Oops some thing went wrong!!");
+    res.status(500).send({error:"Oops some thing went wrong!!", success:false});
   }
 });
 
@@ -101,6 +101,18 @@ router.delete("/deletepost/:id", fetchuser, async (req, res) => {
     //Delete the post
     post = await Posts.findByIdAndDelete(req.params.id);
     res.json("Post has been deleted");
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("Oops some thing went wrong!!");
+  }
+});
+
+//Rout 5: GET user specific posts: POST "/api/posts/yourposts" Login require
+router.post("/yourposts", fetchuser, async (req, res) => {
+  try {
+    //This will fetch all the posts
+    const posts = await Posts.find({user: req.user.id});
+    res.json(posts);
   } catch (error) {
     console.error(error.message);
     res.status(500).send("Oops some thing went wrong!!");

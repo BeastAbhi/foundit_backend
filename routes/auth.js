@@ -13,7 +13,7 @@ secreate = process.env.JWT_SECRET;
 router.post('/signup', [
 body('name', "Name should be at least 3 characters").isLength({ min:3 }),
 body('email', 'Invalid Email').isEmail(),
-body('password', 'Password must be at leat 6 characters').isLength({ min:6 })
+body('password', 'Password must be at leat 6 characters').isLength({ min:8 })
 ], async (req, res)=>{
 
 //This will validate the entred data and respond as per the data
@@ -55,7 +55,6 @@ const errors = validationResult(req);
         res.json({success, authtoken})
 
       } catch (error) {
-      console.error(error.message)
       success = false
       res.status(500).send(success, "Oops some thing went wrong!!")
     }
@@ -64,7 +63,7 @@ const errors = validationResult(req);
 //Rout 2: Authenticateing an user using: POST "/api/auth/login" . NO login required
 router.post('/login',[
   body('email', 'Invalid Email').isEmail(),
-  body('password', 'Password cannot be blank').exists()
+  body('password', 'Password should be at least 8 characters').isLength({ min:8 })
   ], async (req, res)=>{
 
     //This will validate the entred data and respond as per the data
@@ -82,7 +81,7 @@ router.post('/login',[
         success = false
         return res.status(400).json({success, error: "Please Try to login with correct credentials!"})
       }
-      const passCompair = bcrypt.compare(password, user.password)
+      const passCompair = await bcrypt.compare(password, user.password)
       if(!passCompair){
         success = false
         return res.status(400).json({success, error: "Please Try to login with correct credentials!"})
@@ -124,8 +123,7 @@ router.post('/getuser', fetchuser, async (req, res)=>{
 
 //Rout 4: Updating User data using: PUT "/api/auth/updateuser" . login require
 router.put('/updateuser', fetchuser,[
-  body('email', 'Invalid Email').isEmail(),
-  body('password', 'Password cannot be blank').exists()
+  body('name', 'Name should be at least 5 characters').isLength({ min:5 })
 ], async(req, res)=>{
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -135,16 +133,12 @@ router.put('/updateuser', fetchuser,[
 
   try {
     const newUser = {}
-    const {name, email, password} = req.body;
+    const { name } = req.body;
+
     if(name){
       newUser.name = name
     }
-    if(email){
-      newUser.email = email
-    }
-    if(password){
-      newUser.password = password
-    }
+
     const userId = req.user.id;
     const user = await User.findByIdAndUpdate(userId, {$set: newUser}, {new:true}).select("-password")
     res.json(user)
@@ -157,9 +151,8 @@ router.put('/updateuser', fetchuser,[
 
 })
 
-//Rout 4:delete the user: delete "/api/auth/deleteuser" Login require
-router.delete('/deleteuser', fetchuser,[
- body('password', 'Password cannot be blank').exists()],
+//Rout 5:delete the user: delete "/api/auth/deleteuser" Login require
+router.delete('/deleteuser', fetchuser,
  async(req, res)=>{
     //This will validate the entred data and respond as per the data
     //It will return bad request if there are any errors in the data
@@ -170,25 +163,64 @@ router.delete('/deleteuser', fetchuser,[
     }
 
   try {
-    const password = req.body.password
     const userId = req.user.id
     let user = await User.findById(userId)
       if(!user){
         success = false
-        return res.status(400).json({success, error: "Please Try to enter correct password!"})
+        return res.status(400).json({success, error: "User not Found!!"})
       }
-      const passCompair = bcrypt.compare(password, user.password)
-      if(!passCompair){
-        success = false
-        return res.status(400).json({success, error: "Please Try to login with correct credentials!"})
-      }
-  //Delete the post
+
+  //Delete the user
   user = await User.findByIdAndDelete(req.user.id);
   res.json("User has been deleted");
   } catch (error) {
       console.error(error.message)
       res.status(500).send("Oops some thing went wrong!!")
   }
+})
+
+//Rout 6: Changing User Password: PUT "/api/auth/changepassword" . login require
+router.put('/changepassword', fetchuser,[
+  body('oldPassword', 'Password cannot be blank').isLength({ min:8 }),
+  body('newPassword', 'Password cannot be blank').isLength({ min:8 })
+], async(req, res)=>{
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    success = false
+    return res.status(400).json({ success, errors: errors.array() });
+  }
+
+  try {
+    const newUser = {}
+    const { oldPassword, newPassword} = req.body;
+    const userId = req.user.id;
+
+    let user = await User.findById(userId)
+    if(!user){
+      success = false
+      return res.status(400).json({success, error: "Please Try to enter correct password!"})
+    }
+    const passCompair = await bcrypt.compare(oldPassword, user.password)
+    if(!passCompair){
+      success = false
+      return res.status(400).json({success, error: "Please Try to login with correct credentials!"})
+    }
+    
+    const salt = await bcrypt.genSalt(10)
+    const secPass = await bcrypt.hash(newPassword, salt)
+    
+    newUser.password = secPass
+    const updatedUser = await User.findByIdAndUpdate(userId, {$set: newUser}, {new:true}).select("-password")
+    success=true
+    res.json({success,updatedUser})
+
+  } catch (error) {
+    success = false
+      console.error(error.message)
+      return res.status(500).send({success, error:"Oops some thing went wrong!!"})
+  }
+
 })
 
 

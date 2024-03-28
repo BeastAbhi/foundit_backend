@@ -12,7 +12,7 @@ const fetchuser = (req, res, next) =>{
     try {
         const data = jwt.verify(token, secreate)
         req.user = data.user;
-        //The next function means it will go back to the auth.js file and execute the rout: 3 from where the fetchuser is called
+        //The next function means it will go back to the auth.js file and execute the route from where the fetchuser is called
         next();
 
     } catch (error) {

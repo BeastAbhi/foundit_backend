@@ -255,7 +255,7 @@ router.post('/sendemail',[
         
         ${code}
         
-        Please note, this OTP is valid for the next 10 minutes only. If you did not request this OTP, please ignore this email.
+        Please note, this OTP is valid for the next 1 minutes only. If you did not request this OTP, please ignore this email.
         
         If you have any questions or need further assistance, feel free to reply to this email.
         

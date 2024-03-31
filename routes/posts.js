@@ -12,7 +12,7 @@ router.post("/fetchallposts", fetchuser, async (req, res) => {
     res.json(posts);
   } catch (error) {
     console.error(error.message);
-    res.status(500).send({error:"Oops some thing went wrong!!", success:false});
+    res.status(500).send([]);
   }
 });
 

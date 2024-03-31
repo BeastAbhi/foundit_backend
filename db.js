@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
-const mongoURI = "mongodb+srv://abhishekkakade35:AtlasProject2885@foundit.pelbl53.mongodb.net/?retryWrites=true&w=majority"
+require('dotenv').config()
+
+const mongoURI = process.env.MONGO_URL;
 
 const connectToMongo = async () =>{
     const it = await mongoose.connect(mongoURI)
@@ -18,4 +20,5 @@ module.exports = connectToMongo;
 // npm install dotenv --save
 // npm install cors
 
-//for image uploading
+//for sending mails
+// npm i nodemailer

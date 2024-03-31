@@ -7,6 +7,20 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const fetchuser = require('../middleware/fetchUser')
 
+// for sending mail
+const nodemailer = require('nodemailer');
+const { isReadable } = require('nodemailer/lib/xoauth2');
+//Creating transporter for sending mails
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_MAIL,
+    pass: process.env.SMTP_PASSWORD,
+  },
+});
+
 secreate = process.env.JWT_SECRET;
 
 //Rout 1: Create a User using: POST "/api/auth/signup" . NO login required
@@ -221,6 +235,46 @@ router.put('/changepassword', fetchuser,[
       return res.status(500).send({success, error:"Oops some thing went wrong!!"})
   }
 
+})
+
+//Rout 7: sending Email to an user: POST "/api/auth/sendemail" . login not require
+router.post('/sendemail',[
+    body('email', 'Invalid Email').isEmail(),
+], async (req, res)=>{
+  try {
+      const {email, code} = req.body;
+      var mailOptions ={
+        from: process.env.SMTP_MAIL,
+        to: email,
+        subject: "Your One-Time Password for FoundIt Signup",
+        text: `Dear User,
+
+        Thank you for choosing to sign up with FoundIt. We're excited to have you on board!
+        
+        To complete your signup process, please use the following One-Time Password (OTP):
+        
+        ${code}
+        
+        Please note, this OTP is valid for the next 10 minutes only. If you did not request this OTP, please ignore this email.
+        
+        If you have any questions or need further assistance, feel free to reply to this email.
+        
+        Thank you,
+        The FoundIt Team`
+      };
+      transporter.sendMail(mailOptions, function(error,info){
+        if(error){
+          console.error(error.message)
+          res.status(500).send("Oops some thing went wrong!!")
+        }
+        else{
+          res.json({message:"Email send successfully",success:true});
+        }
+      })
+  } catch (error) {
+    console.error(error.message)
+    res.status(500).send("Oops some thing went wrong!!")
+  }
 })
 
 

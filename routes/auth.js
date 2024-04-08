@@ -265,15 +265,15 @@ router.post('/sendemail',[
       transporter.sendMail(mailOptions, function(error,info){
         if(error){
           console.error(error.message)
-          res.status(500).send("Oops some thing went wrong!!")
+          res.status(500).send({message:"Oops some thing went wrong!!",success:"danger"})
         }
         else{
-          res.json({message:"Email send successfully",success:true});
+          res.json({message:"Email send successfully",success:"success"});
         }
       })
   } catch (error) {
     console.error(error.message)
-    res.status(500).send("Oops some thing went wrong!!")
+    res.status(500).send({message:"Oops some thing went wrong!!",success:"danger"})
   }
 })
 
